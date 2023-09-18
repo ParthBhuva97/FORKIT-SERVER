@@ -1,22 +1,8 @@
 const { default: axios } = require("axios");
 const express = require("express");
-const mysql = require("mysql");
 require("dotenv").config();
 
-var con = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "forkit",
-});
-con.connect(function (err) {
-  if (err) {
-    console.error(err);
-    res.status(500).send("Database Connection Error");
-    return;
-  }
-  console.log("Connected!");
-});
+const con = require("../db");
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -118,14 +104,63 @@ router.post("/forkRepo", async (req, res) => {
   }
 });
 
+router.get("/getUserProjects", (req, res) => {
+  const user = req.query.user;
+  console.log(user);
+  const query = "SELECT * FROM projects WHERE `user_id` = ?";
+
+  con.query(query, [user], function (err, results) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    console.log(results);
+    // Do not call con.end() here; it may close the connection prematurely.
+
+    res.json(results); // Send the results as a JSON response.
+  });
+});
+
+router.get("/approve",(req,res)=>{
+  const project_id = req.query.project_id;
+  console.log(project_id);
+  const query =
+    "UPDATE `projects` SET `status` = 'approved' WHERE `projects`.`project_id` = " +
+    `${project_id}`;
+  con.query(query,(err,results)=>{
+    if (err) throw res.send(err);
+    res.send(results);
+  })
+  
+})
+
+router.get("/reject", (req, res) => {
+  const project_id = req.query.project_id;
+  console.log(project_id);
+  const query =
+    "UPDATE `projects` SET `status` = 'rejected' WHERE `projects`.`project_id` = " +
+    `${project_id}`;
+  con.query(query, (err, results) => {
+    if (err) throw res.send(err);
+    res.send(results);
+  });
+});
+
 router.get("/getProjects", (req, res) => {
-  const projects = [];
-  const query = "SELECT * FROM projects";
+  var status = req.query.status;
+  console.log(status);
+  var condition = `WHERE status="${status}"`;
+  var query = `SELECT * FROM projects `;
+  if(status !== "all"){
+    query += condition
+  }
+  console.log(query);
   con.query(query, function (err, results) {
     if (err) res.send(err);
     // projects = {...results}
-    console.log(results);
-    res.send(results);
+    // console.log(results);
+    res.json(results);
   });
 });
 
