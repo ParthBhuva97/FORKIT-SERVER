@@ -9,7 +9,6 @@ var con = mysql.createConnection({
 con.connect(function (err) {
   if (err) {
     console.error(err);
-    res.status(500).send("Database Connection Error");
     return;
   }
   console.log("Connected!");
