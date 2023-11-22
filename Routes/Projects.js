@@ -240,4 +240,29 @@ router.get("/getProjects", (req, res) => {
   });
 });
 
+router.get("/getStats",(req,res)=>{
+  const query = `SELECT * FROM projects`;
+  con.query(query, function (err, results) {
+    if (err) res.send(err);
+    // projects = {...results}
+    // console.log(results);
+    // Create an object to categorize projects by status
+    const categorizedProjects = results.reduce((result, project) => {
+      const { status } = project;
+
+      // Check if the status property exists in the result object
+      if (!result[status]) {
+        // If not, create a new array for that status
+        result[status] = [];
+      }
+
+      // Push the current project to the array corresponding to its status
+      result[status].push(project);
+
+      return result;
+    }, {});
+    res.send(categorizedProjects);
+  });
+})
+
 module.exports = router;
